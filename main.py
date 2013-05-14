@@ -28,20 +28,20 @@ if __name__ == '__main__':
         conn, sockname = s.accept()
         print('We have accepted a connection from %s:%s'%(sockname[0],sockname[1]))
 
-        msg=conn.recv(1024)
+        msg=conn.recv(2048)
         if len(msg) > 0:
             print(msg)
             #response the request
             webpage='<html>Hello World</html>'
             conn.sendall(
                 """
-                HTTP/1.0 200 OK
-                Server: BWS/1.0
-                Content-Length: %d
-                Content-Type: text/html;charset=utf-8
-                Cache-Control: private
+HTTP/1.0 200 OK
+Server: BWS/1.0
+Content-Length: %d
+Content-Type: text/html;charset=utf-8
+Cache-Control: private
 
-                %s
+%s
                 """%(len(webpage),webpage)
             )
         conn.close()
