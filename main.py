@@ -31,6 +31,12 @@ if __name__ == '__main__':
         msg=conn.recv(2048)
         if len(msg) > 0:
             print(msg)
+            #get request url
+            pos1 = msg.find('GET /')+3
+            pos2 = msg.find('HTTP/')-1
+            if 0 <= pos1 < pos2:
+                url=msg[pos1:pos2]
+                print(url)
             #response the request
             webpage='<html>Hello World</html>'
             conn.sendall(
