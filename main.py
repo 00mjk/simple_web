@@ -6,10 +6,13 @@
 
 import sys
 import socket
+from util import sw_log
+from util import sw_request
+from util import sw_response
 
 if __name__ == '__main__':
     #wellcome
-    print('\nsimple_web a handmade website,enjoy the building by hand!\n')
+    sw_log('simple_web a handmade website,enjoy the building by hand!')
     #get the args
     host=sys.argv[1]
     port=sys.argv[2]
@@ -22,32 +25,22 @@ if __name__ == '__main__':
     #catch
     #exception
 
-    print('listening at:\nhost:%s\nport:%s'%(host,port))
+    sw_log('listening at host:%s port:%s'%(host,port))
 
     while True:
         conn, sockname = s.accept()
-        print('We have accepted a connection from %s:%s'%(sockname[0],sockname[1]))
+        sw_log('a connection accepted from %s:%s'%(sockname[0],sockname[1]))
 
         msg=conn.recv(2048)
         if len(msg) > 0:
-            print(msg)
-            #get request url
-            pos1 = msg.find('GET /')+3
-            pos2 = msg.find('HTTP/')-1
-            if 0 <= pos1 < pos2:
-                url=msg[pos1:pos2]
-                print(url)
+            #get request header
+            method,url=sw_request(msg)
+            sw_log('method:%s url:\'%s\''%(method,url))
             #response the request
-            webpage='<html>Hello World</html>'
-            conn.sendall(
-                """
-HTTP/1.0 200 OK
-Server: BWS/1.0
-Content-Length: %d
-Content-Type: text/html;charset=utf-8
-Cache-Control: private
-
-%s
-                """%(len(webpage),webpage)
-            )
+            webpage=''
+            if url == '/aaa':
+                webpage='<html><h1>aaa</h1></html>'
+            else:
+                webpage='<html><h1>Hello World</h1></html>'
+            conn.sendall(sw_response(webpage))
         conn.close()
