@@ -20,5 +20,5 @@ if __name__ == '__main__':
         sw_err_print('please launch simple_web like "python main.py 127.0.0.1 80"')
         sys.exit()
 
-    simple_web.run(_app='simple_web_app',_server='simple_web_server',_host='0.0.0.0',_port='80')
+    simple_web.run(_app='simple_web_app',_server='simple_web_server',_host=host,_port=port)
 

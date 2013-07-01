@@ -10,5 +10,5 @@ class sw_WSGIServer(object):
 
     def run(self, app): # pragma: no cover
         from wsgiref.simple_server import make_server
-        srv = make_server(self.host, self.port, app)
-        srv.serve_forever()
+        self.server = make_server(self.host, self.port, app)
+        self.server.serve_forever()
