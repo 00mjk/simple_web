@@ -13,7 +13,7 @@ application_names={
     'simple_web_app':sw_WSGIApp
 }
 
-def run(_app='simple_web_app', _server='simple_web_server', _host='127.0.0.1', _port=8080):
+def run(_app='simple_web_app', _server='simple_web_server', _host='127.0.0.1', _port=8080, **kargs):
         #,interval=1, reloader=False, quiet=False, plugins=None,debug=False, **kargs):
     """
     launch the whole website
@@ -27,16 +27,15 @@ def run(_app='simple_web_app', _server='simple_web_server', _host='127.0.0.1', _
                 raise ValueError("Application is not callable: %r" % _app)
         else:
             raise ValueError("Application is not supplied" % _app)
-        #for plugin in plugins or []:
-        #    app.install(plugin)
+#        for plugin in plugins or []:
+#            app.install(plugin)
 
         if _server in server_names:
             server = server_names.get(_server)
-            if isinstance(server,type): server = server()
+            server = server((_host,int(_port)),**kargs)
         else:
             raise ValueError("Server is not supplied: %s" % _server)
 
-        server.setup(_host,_port)
         server.run(app)
 
     except KeyboardInterrupt:
