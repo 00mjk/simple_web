@@ -2,21 +2,25 @@
 #author:KelvinKuo
 #date  :2013-05-17
 
-from BaseHTTPServer import HTTPServer
+import SocketServer
+import socket # For gethostbyaddr()
 
-class sw_WSGIServer(HTTPServer):
-
-    """BaseHTTPServer that implements the Python WSGI protocol"""
+class sw_WSGIServer(SocketServer.TCPServer):
+    """sw_WSGIServer that implements the Python WSGI protocol"""
 
     application = None
+    allow_reuse_address = 1    # Seems to make sense in testing environment
 
     def __init__(self,addr,**kargs):
         from wsgiref.simple_server import WSGIRequestHandler
-        HTTPServer.__init__(self,addr,WSGIRequestHandler)
+        SocketServer.TCPServer.__init__(self,addr,WSGIRequestHandler)
 
     def server_bind(self):
         """Override server_bind to store the server name."""
-        HTTPServer.server_bind(self)
+        SocketServer.TCPServer.server_bind(self)
+        host, port = self.socket.getsockname()[:2]
+        self.server_name = socket.getfqdn(host)
+        self.server_port = port
         self.setup_environ()
 
     def setup_environ(self):

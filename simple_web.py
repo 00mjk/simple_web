@@ -14,7 +14,6 @@ application_names={
 }
 
 def run(_app='simple_web_app', _server='simple_web_server', _host='127.0.0.1', _port=8080, **kargs):
-        #,interval=1, reloader=False, quiet=False, plugins=None,debug=False, **kargs):
     """
     launch the whole website
     """
