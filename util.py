@@ -8,15 +8,17 @@ def sw_log(msg,disk=False):
     """
     log api,print to the screen or store on disk
     """
-    if not disk:
-        print('[%s]%s'%(datetime.datetime.today(),msg))
+    print('[%s]%s'%(datetime.datetime.today(),msg))
+    if disk:
+        pass
 
 def sw_err_print(msg,disk=False):
     """
     print error msg
     """
-    if not disk:
-        print('[%s]ERROR:%s'%(datetime.datetime.today(),msg))
+    print('[%s]ERROR:%s'%(datetime.datetime.today(),msg))
+    if disk:
+        pass
 
 def sw_request(request):
     """
