@@ -17,8 +17,12 @@ class sw_WSGIApp(object):
     callable as a WSGI application
     """
     def __init__(self):
-        self.temp = sw_Resource
-        self.temp.setup()
+        sw_Resource.setup()
+        self.response_status = "200 OK"
+        self.response_head = [
+            ('Content-type', 'text/html;charset=utf-8'),
+            ('Server', 'simple_web/0.1')
+        ]
 
     def __call__(self, environ, start_response):
         """
@@ -32,12 +36,11 @@ class sw_WSGIApp(object):
         """
         sw_log('%s:%s'%('PATH_INFO',environ['PATH_INFO']))
         try:
-            start_response("200 OK", [
-                ('Content-type', 'text/html;charset=utf-8'),
-                ('Server', 'simple_web/0.1')
-            ])
             path = self.get_path(environ)
             func = route_super(path)
+
+            #
+            start_response(self.response_status, self.response_head)
             return func(path)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
@@ -91,7 +94,7 @@ class sw_Resource(object):
         if path in cls.res_list:
             return open(os.path.join(cls.root,path)).read()
         sw_err_print("%s not found" % path)
-        return ""
+        return cls.get_res_path("error404.html")
 
 #######################
 # route
@@ -108,7 +111,7 @@ def route(path):
 def route_super(path):
     """top level route"""
     #static file
-    resource = [".js",".JS",".css",".CSS",".html",".jpg",".png"]
+    resource = [".js",".JS",".css",".CSS",".html",".jpg",".png",".ico",".avi",".gif"]
     for i in resource:
         if i in path: return route_static
 
@@ -116,8 +119,6 @@ def route_super(path):
     return routeMap.get_route(path)
 
 def route_static(path):
-    if len(sw_Resource.get_res_path(path)) == 0:
-        return sw_Resource.get_res_path("error404.html")
     return sw_Resource.get_res_path(path)
 
 class routeMap(object):

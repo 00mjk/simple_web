@@ -14,11 +14,11 @@ from wsgiapp import sw_Resource
 
 @route("/")
 def route_index(path):
-    return sw_Resource.get_res_path("welcome.html")
+    return sw_Resource.get_res_path("index.html")
 
-@route("/welcome")
+@route("/index")
 def route_welcome(path):
-    return sw_Resource.get_res_path("welcome.html")
+    return sw_Resource.get_res_path("index.html")
 
 #@route("/result")
 #def route_result():
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     sw_log('simple_web a handmade website,enjoy the building by hand!')
     #get the args
 
-    host = "127.0.0.1" if len(sys.argv) < 3 else sys.argv[1]
+    host = "0.0.0.0" if len(sys.argv) < 3 else sys.argv[1]
     port = "80" if len(sys.argv) < 3 else sys.argv[2]
 
     simple_web.run(_app='simple_web_app',_server='simple_web_server',_host=host,_port=port)
