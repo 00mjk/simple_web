@@ -7,6 +7,7 @@ import socket # For gethostbyaddr()
 from wsgiref.simple_server import WSGIRequestHandler
 from wsgiref.simple_server import ServerHandler
 from util import sw_log
+import errno
 
 class sw_WSGIServer(SocketServer.TCPServer):
     """sw_WSGIServer that implements the Python WSGI protocol"""
@@ -46,6 +47,26 @@ class sw_WSGIServer(SocketServer.TCPServer):
         self.set_app(app)
         self.serve_forever()
 
+    def _handle_request_noblock(self):
+        """Handle one request, without blocking.
+
+        fix the exception handle func
+        """
+        try:
+            request, client_address = self.get_request()
+        except socket.error:
+            return
+        if self.verify_request(request, client_address):
+            try:
+                self.process_request(request, client_address)
+            except IOError as e:
+                if e.errno != errno.EPIPE:
+                    self.handle_error(request, client_address)
+                self.close_request(request)
+            except:
+                self.handle_error(request, client_address)
+                self.close_request(request)
+
 class sw_WSGIRequestHandler(WSGIRequestHandler):
 
     def handle(self):
@@ -72,11 +93,16 @@ class sw_ServerHandler(ServerHandler):
     """
 
     def finish_response(self):
-        if not self.result_is_file() or not self.sendfile():
-            if isinstance(self.result, basestring):
-                self.write(self.result)
-            else:
-                for data in self.result:
-                    self.write(data)
-            self.finish_content()
-        self.close()
+        try:
+            if not self.result_is_file() or not self.sendfile():
+                if isinstance(self.result, basestring):
+                    self.write(self.result)
+                else:
+                    for data in self.result:
+                        self.write(data)
+                self.finish_content()
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                sw_log("Browser closed")
+        finally:
+            self.close()
