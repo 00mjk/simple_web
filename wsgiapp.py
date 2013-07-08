@@ -13,9 +13,8 @@ import os
 # application for WSGI
 #######################
 class sw_WSGIApp(object):
-    """
-    callable as a WSGI application
-    """
+    """callable as a WSGI application"""
+
     def __init__(self):
         sw_Resource.setup()
         self.response_status = "200 OK"
@@ -25,23 +24,20 @@ class sw_WSGIApp(object):
         ]
 
     def __call__(self, environ, start_response):
-        """
-        Each instance of :class:'sw_WSGIApp' is a WSGI application.
-        """
+        """Each instance of :class:'sw_WSGIApp' is a WSGI application."""
+
         return self.wsgi(environ, start_response)
 
     def wsgi(self, environ, start_response):
-        """
-        The WSGI-interface.
-        """
-        sw_log('%s:%s'%('PATH_INFO',environ['PATH_INFO']))
+        """The WSGI-interface."""
+
+        sw_log('REQUEST %s:%s'%('PATH_INFO',environ['PATH_INFO']))
         try:
             path = self.get_path(environ)
             func = route_super(path)
 
-            #
             start_response(self.response_status, self.response_head)
-            return func(path)
+            return func(environ)
         except (KeyboardInterrupt, SystemExit, MemoryError):
             raise
         except Exception:
@@ -53,8 +49,10 @@ class sw_WSGIApp(object):
             start_response('500 INTERNAL SERVER ERROR', headers, sys.exc_info())
             return [sw_tob(err)]
 
-    def get_path(self, environ):
+    @staticmethod
+    def get_path(environ):
         """get request path from environ"""
+
         return environ['PATH_INFO']
 
 #######################
@@ -81,13 +79,6 @@ class sw_Resource(object):
         cls.res_list = []
         cls.root = ""
 
-#    @classmethod
-#    def get_res_fname(cls,fname):
-#        if fname in cls.res_list:
-#            return open(os.path.join(cls.root,fname)).read()
-#        sw_err_print("%s not found" % fname)
-#        return ""
-
     @classmethod
     def get_res_path(cls,path):
         path = path[1:] if path[0] == '/' else path
@@ -111,15 +102,15 @@ def route(path):
 def route_super(path):
     """top level route"""
     #static file
-    resource = [".js",".JS",".css",".CSS",".html",".jpg",".png",".ico",".avi",".gif"]
-    for i in resource:
+    reses = [".js",".JS",".css",".CSS",".html",".jpg",".png",".ico",".avi",".gif"]
+    for i in reses:
         if i in path: return route_static
 
     #other route
     return routeMap.get_route(path)
 
-def route_static(path):
-    return sw_Resource.get_res_path(path)
+def route_static(environ):
+    return sw_Resource.get_res_path(sw_WSGIApp.get_path(environ))
 
 class routeMap(object):
 
@@ -133,3 +124,25 @@ class routeMap(object):
     @classmethod
     def get_route(cls,k):
         return cls.routemap[k] if k in cls.routemap else cls.routemap["default"]
+
+#######################
+# Form Analyze
+#######################
+class sw_Form(object):
+    """used for getting form data
+
+    classmethod "get" search key every time
+    if there many key:value consider make a dict for getting data
+    """
+    @classmethod
+    def get(cls,environ,key):
+        query = environ["QUERY_STRING"]
+        if not query: return None
+        if '&' not in query: return None
+        l = query.split('&')
+        for kv in l:
+            if '=' not in kv: continue
+            l_kv = kv.split('=')
+            if l_kv[0] == key: return l_kv[1]
+
+        return None

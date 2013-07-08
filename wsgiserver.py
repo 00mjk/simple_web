@@ -4,6 +4,9 @@
 
 import SocketServer
 import socket # For gethostbyaddr()
+from wsgiref.simple_server import WSGIRequestHandler
+from wsgiref.simple_server import ServerHandler
+from util import sw_log
 
 class sw_WSGIServer(SocketServer.TCPServer):
     """sw_WSGIServer that implements the Python WSGI protocol"""
@@ -12,8 +15,8 @@ class sw_WSGIServer(SocketServer.TCPServer):
     allow_reuse_address = 1    # Seems to make sense in testing environment
 
     def __init__(self,addr,**kargs):
-        from wsgiref.simple_server import WSGIRequestHandler
-        SocketServer.TCPServer.__init__(self,addr,WSGIRequestHandler)
+
+        SocketServer.TCPServer.__init__(self,addr,sw_WSGIRequestHandler)
 
     def server_bind(self):
         """Override server_bind to store the server name."""
@@ -42,3 +45,38 @@ class sw_WSGIServer(SocketServer.TCPServer):
     def run(self,app):
         self.set_app(app)
         self.serve_forever()
+
+class sw_WSGIRequestHandler(WSGIRequestHandler):
+
+    def handle(self):
+        """Handle a single HTTP request"""
+
+        self.raw_requestline = self.rfile.readline()
+        if not self.parse_request(): # An error code has been sent, just exit
+            return
+
+        handler = sw_ServerHandler(
+            self.rfile, self.wfile, self.get_stderr(), self.get_environ()
+        )
+        handler.request_handler = self      # backpointer for logging
+        handler.run(self.server.get_app())
+
+    def log_message(self, format, *args):
+
+        sw_log("%s %s" %(self.address_string(),format%args))
+
+class sw_ServerHandler(ServerHandler):
+    """sw_Serverhandler fix the bug of ServerHandler in func finish_response
+
+    it iterator every char of the string 'self.result'
+    """
+
+    def finish_response(self):
+        if not self.result_is_file() or not self.sendfile():
+            if isinstance(self.result, basestring):
+                self.write(self.result)
+            else:
+                for data in self.result:
+                    self.write(data)
+            self.finish_content()
+        self.close()
